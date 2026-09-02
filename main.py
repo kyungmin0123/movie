@@ -59,6 +59,7 @@ df.loc[
     "genre_first"
 ] = "미상"
 
+
 # =======================================
 # 1. 장르별 영화 수 - 도넛 차트
 # =======================================
@@ -90,12 +91,10 @@ fig1.update_traces(
     )
 )
 
-st.plotly_chart(
-    fig1,
-    use_container_width=True
-)
+st.plotly_chart(fig1, use_container_width=True)
 
 st.subheader("📝 이 그래프로 알 수 있는 것")
+
 st.text_area(
     "한 문장으로 작성해 보세요.",
     placeholder="예: 어떤 장르의 영화가 가장 많은지 알 수 있다.",
@@ -103,6 +102,7 @@ st.text_area(
 )
 
 st.divider()
+
 
 # =======================================
 # 2. 장르별 영화 관객 수 - 트리맵
@@ -128,12 +128,10 @@ fig2.update_traces(
     )
 )
 
-st.plotly_chart(
-    fig2,
-    use_container_width=True
-)
+st.plotly_chart(fig2, use_container_width=True)
 
 st.subheader("📝 이 그래프로 알 수 있는 것")
+
 st.text_area(
     "한 문장으로 작성해 보세요.",
     placeholder="예: 어떤 장르의 영화가 많은 관객을 모았는지 알 수 있다.",
@@ -141,6 +139,7 @@ st.text_area(
 )
 
 st.divider()
+
 
 # =======================================
 # 3. 총 관객 수 분포 - 히스토그램
@@ -176,12 +175,8 @@ fig3.update_layout(
     xaxis_tickformat=","
 )
 
-st.plotly_chart(
-    fig3,
-    use_container_width=True
-)
+st.plotly_chart(fig3, use_container_width=True)
 
-# 가장 많이 몰려 있는 구간 계산
 if len(hist_values) > 0:
 
     bins = 30
@@ -216,6 +211,7 @@ if len(hist_values) > 0:
     )
 
 st.subheader("📝 이 그래프로 알 수 있는 것")
+
 st.text_area(
     "한 문장으로 작성해 보세요.",
     placeholder="예: 대부분의 영화가 어느 정도의 관객 수를 기록했는지 알 수 있다.",
@@ -223,6 +219,7 @@ st.text_area(
 )
 
 st.divider()
+
 
 # =======================================
 # 4. 첫날 스크린 수와 총 관객 수 관계
@@ -270,16 +267,203 @@ fig4.update_layout(
     yaxis_tickformat=","
 )
 
-st.plotly_chart(
-    fig4,
-    use_container_width=True
-)
+st.plotly_chart(fig4, use_container_width=True)
 
 st.subheader("📝 이 그래프로 알 수 있는 것")
+
 st.text_area(
     "한 문장으로 작성해 보세요.",
-    placeholder="예: 첫날 스크린 수가 많을수록 총 관객 수도 많아지는 경향이 있는지 알 수 있다.",
+    placeholder="예: 첫날 스크린 수와 총 관객 수 사이의 관계를 알 수 있다.",
     key="graph4_text"
+)
+
+st.divider()
+
+
+# =======================================
+# 5. 장르별 총 관객 수 - 박스플롯
+# 영화가 10편 이상인 장르만 표시
+# =======================================
+st.header("5️⃣ 장르별 총 관객 수 분포")
+
+genre_movie_count = (
+    df["genre_first"]
+    .value_counts()
+)
+
+valid_genres = genre_movie_count[
+    genre_movie_count >= 10
+].index
+
+box_df = df[
+    df["genre_first"].isin(valid_genres)
+].dropna(
+    subset=["genre_first", "total_audi", "movieNm"]
+).copy()
+
+fig5 = px.box(
+    box_df,
+    x="genre_first",
+    y="total_audi",
+    points="outliers",
+    hover_name="movieNm",
+    title="영화가 10편 이상인 장르의 총 관객 수 분포",
+    labels={
+        "genre_first": "장르",
+        "total_audi": "총 관객 수"
+    }
+)
+
+fig5.update_traces(
+    hovertemplate=(
+        "<b>%{hovertext}</b><br>"
+        "총 관객 수: %{y:,}명"
+        "<extra></extra>"
+    )
+)
+
+fig5.update_layout(
+    yaxis_tickformat=","
+)
+
+st.plotly_chart(fig5, use_container_width=True)
+
+st.subheader("📝 이 그래프로 알 수 있는 것")
+
+st.text_area(
+    "한 문장으로 작성해 보세요.",
+    placeholder="예: 장르별 총 관객 수의 분포와 이상치를 비교할 수 있다.",
+    key="graph5_text"
+)
+
+st.divider()
+
+
+# =======================================
+# 6. 첫날 스크린 수 + 첫 주 관객 수 + 총 관객 수
+# 버블 산점도
+# =======================================
+st.header("6️⃣ 첫날 스크린 수와 총 관객 수 - 버블 그래프")
+
+bubble_df = df.dropna(
+    subset=[
+        "first_scrn",
+        "total_audi",
+        "first_week_audi",
+        "movieNm",
+        "genre_first"
+    ]
+).copy()
+
+# 버블 크기가 너무 커지는 것을 방지하기 위한 최소값 처리
+bubble_df["bubble_size"] = bubble_df["first_week_audi"].clip(lower=1)
+
+fig6 = px.scatter(
+    bubble_df,
+    x="first_scrn",
+    y="total_audi",
+    size="bubble_size",
+    color="genre_first",
+    hover_name="movieNm",
+    title="첫날 스크린 수와 총 관객 수 (버블 크기 = 첫 주 관객)",
+    labels={
+        "first_scrn": "첫날 스크린 수",
+        "total_audi": "총 관객 수",
+        "genre_first": "장르",
+        "bubble_size": "첫 주 관객"
+    },
+    size_max=50
+)
+
+fig6.update_traces(
+    marker=dict(
+        opacity=0.7
+    ),
+    hovertemplate=(
+        "<b>%{hovertext}</b><br>"
+        "첫날 스크린 수: %{x:,}개<br>"
+        "총 관객 수: %{y:,}명"
+        "<extra></extra>"
+    )
+)
+
+fig6.update_layout(
+    xaxis_tickformat=",",
+    yaxis_tickformat=","
+)
+
+st.plotly_chart(fig6, use_container_width=True)
+
+st.subheader("📝 이 그래프로 알 수 있는 것")
+
+st.text_area(
+    "한 문장으로 작성해 보세요.",
+    placeholder="예: 첫 주 관객 수가 큰 영화가 어떤 위치에 분포하는지 알 수 있다.",
+    key="graph6_text"
+)
+
+st.divider()
+
+
+# =======================================
+# 7. 제작 국가 → 장르 선버스트
+# 크기 = 영화 편수
+# =======================================
+st.header("7️⃣ 제작 국가와 장르의 관계")
+
+sunburst_df = df.dropna(
+    subset=["nation", "genre_first"]
+).copy()
+
+# 제작 국가가 여러 개 적혀 있는 경우 첫 번째 국가만 사용
+sunburst_df["nation_first"] = (
+    sunburst_df["nation"]
+    .astype(str)
+    .str.split("|")
+    .str[0]
+    .str.strip()
+)
+
+sunburst_df.loc[
+    sunburst_df["nation_first"].isin(["", "nan", "None"]),
+    "nation_first"
+] = "미상"
+
+sunburst_count = (
+    sunburst_df
+    .groupby(["nation_first", "genre_first"])
+    .size()
+    .reset_index(name="movie_count")
+)
+
+fig7 = px.sunburst(
+    sunburst_count,
+    path=["nation_first", "genre_first"],
+    values="movie_count",
+    title="제작 국가 → 장르별 영화 편수",
+    labels={
+        "nation_first": "제작 국가",
+        "genre_first": "장르",
+        "movie_count": "영화 편수"
+    }
+)
+
+fig7.update_traces(
+    hovertemplate=(
+        "<b>%{label}</b><br>"
+        "영화 편수: %{value}편"
+        "<extra></extra>"
+    )
+)
+
+st.plotly_chart(fig7, use_container_width=True)
+
+st.subheader("📝 이 그래프로 알 수 있는 것")
+
+st.text_area(
+    "한 문장으로 작성해 보세요.",
+    placeholder="예: 제작 국가별로 어떤 장르의 영화가 많이 만들어졌는지 알 수 있다.",
+    key="graph7_text"
 )
 
 st.divider()
