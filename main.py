@@ -23,7 +23,6 @@ DATA_URL = "https://raw.githubusercontent.com/greatsong/modudata/main/data/kobis
 
 df = pd.read_csv(DATA_URL)
 
-# 숫자형 변환
 numeric_columns = [
     "first_scrn",
     "first_show",
@@ -35,7 +34,6 @@ numeric_columns = [
 for col in numeric_columns:
     df[col] = pd.to_numeric(df[col], errors="coerce")
 
-# 개봉일 변환
 df["openDt"] = pd.to_datetime(
     df["openDt"].astype(str),
     format="%Y%m%d",
@@ -45,7 +43,6 @@ df["openDt"] = pd.to_datetime(
 
 # =======================================
 # 장르 정리
-# 여러 장르 중 첫 번째 장르만 사용
 # =======================================
 df["genre_first"] = (
     df["genre"]
@@ -85,11 +82,23 @@ fig1 = px.pie(
 
 fig1.update_traces(
     textinfo="percent",
+    textfont_size=16,
     hovertemplate=(
         "<b>%{label}</b><br>"
         "영화 수: %{value}편<br>"
         "비율: %{percent}"
         "<extra></extra>"
+    )
+)
+
+# ★ 1번 그래프 크게
+fig1.update_layout(
+    height=650,
+    margin=dict(
+        l=20,
+        r=20,
+        t=80,
+        b=20
     )
 )
 
@@ -438,7 +447,6 @@ sunburst_df = df.dropna(
     subset=["nation", "genre_first"]
 ).copy()
 
-# 제작 국가가 여러 개라면 첫 번째 국가만 사용
 sunburst_df["nation_first"] = (
     sunburst_df["nation"]
     .astype(str)
@@ -488,7 +496,7 @@ fig7.update_traces(
     )
 )
 
-# ★ 7번 그래프 크게 만들기
+# ★ 7번 그래프 크게
 fig7.update_layout(
     height=850,
     margin=dict(
