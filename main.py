@@ -355,7 +355,6 @@ bubble_df = df.dropna(
     ]
 ).copy()
 
-# 버블 크기가 너무 커지는 것을 방지하기 위한 최소값 처리
 bubble_df["bubble_size"] = bubble_df["first_week_audi"].clip(lower=1)
 
 fig6 = px.scatter(
@@ -415,7 +414,6 @@ sunburst_df = df.dropna(
     subset=["nation", "genre_first"]
 ).copy()
 
-# 제작 국가가 여러 개 적혀 있는 경우 첫 번째 국가만 사용
 sunburst_df["nation_first"] = (
     sunburst_df["nation"]
     .astype(str)
@@ -464,6 +462,92 @@ st.text_area(
     "한 문장으로 작성해 보세요.",
     placeholder="예: 제작 국가별로 어떤 장르의 영화가 많이 만들어졌는지 알 수 있다.",
     key="graph7_text"
+)
+
+st.divider()
+
+
+# =======================================
+# 8. 장르별 TOP 10 유지 기간 - 막대그래프
+# 영화가 10편 이상인 장르만 표시
+# =======================================
+st.header("8️⃣ 장르별 TOP 10 유지 기간")
+
+days_df = df.dropna(
+    subset=[
+        "genre_first",
+        "days_in_top10"
+    ]
+).copy()
+
+# 영화가 10편 이상인 장르만 선택
+genre_count_for_days = (
+    days_df["genre_first"]
+    .value_counts()
+)
+
+valid_genres_days = genre_count_for_days[
+    genre_count_for_days >= 10
+].index
+
+days_df = days_df[
+    days_df["genre_first"].isin(valid_genres_days)
+]
+
+# 장르별 평균 TOP 10 유지 일수
+genre_days = (
+    days_df
+    .groupby("genre_first")["days_in_top10"]
+    .mean()
+    .reset_index()
+)
+
+genre_days.columns = [
+    "genre",
+    "average_days"
+]
+
+# 평균 유지 일수가 긴 순서로 정렬
+genre_days = genre_days.sort_values(
+    "average_days",
+    ascending=False
+)
+
+fig8 = px.bar(
+    genre_days,
+    x="genre",
+    y="average_days",
+    title="장르별 평균 TOP 10 유지 일수",
+    labels={
+        "genre": "장르",
+        "average_days": "평균 TOP 10 유지 일수"
+    },
+    text="average_days"
+)
+
+fig8.update_traces(
+    texttemplate="%{text:.1f}일",
+    textposition="outside",
+    hovertemplate=(
+        "<b>%{x}</b><br>"
+        "평균 TOP 10 유지: %{y:.1f}일"
+        "<extra></extra>"
+    )
+)
+
+fig8.update_layout(
+    yaxis_title="평균 TOP 10 유지 일수",
+    xaxis_title="장르"
+)
+
+st.plotly_chart(fig8, use_container_width=True)
+
+st.subheader("📝 이 그래프로 알 수 있는 것")
+
+st.text_area(
+    "한 문장으로 작성해 보세요.",
+    placeholder="예: 어떤 장르의 영화가 TOP 10에 오래 머무르는 경향이 있는지 알 수 있다.",
+    key="graph8_text"
 )
 
 st.divider()
