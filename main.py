@@ -3,9 +3,9 @@ import pandas as pd
 import numpy as np
 import plotly.express as px
 
-# ---------------------------------------
+# =======================================
 # 기본 설정
-# ---------------------------------------
+# =======================================
 st.set_page_config(
     page_title="영화 데이터 그래프 도감 2",
     page_icon="🎬",
@@ -15,9 +15,10 @@ st.set_page_config(
 st.title("🎬 영화 데이터 그래프 도감 2 - 분포와 관계")
 st.write("영화 데이터를 다양한 그래프로 살펴봅니다.")
 
-# ---------------------------------------
+
+# =======================================
 # 데이터 불러오기
-# ---------------------------------------
+# =======================================
 DATA_URL = "https://raw.githubusercontent.com/greatsong/modudata/main/data/kobis_movies.csv"
 
 df = pd.read_csv(DATA_URL)
@@ -41,10 +42,11 @@ df["openDt"] = pd.to_datetime(
     errors="coerce"
 )
 
-# ---------------------------------------
+
+# =======================================
 # 장르 정리
 # 여러 장르 중 첫 번째 장르만 사용
-# ---------------------------------------
+# =======================================
 df["genre_first"] = (
     df["genre"]
     .fillna("미상")
@@ -91,7 +93,10 @@ fig1.update_traces(
     )
 )
 
-st.plotly_chart(fig1, use_container_width=True)
+st.plotly_chart(
+    fig1,
+    use_container_width=True
+)
 
 st.subheader("📝 이 그래프로 알 수 있는 것")
 
@@ -128,7 +133,10 @@ fig2.update_traces(
     )
 )
 
-st.plotly_chart(fig2, use_container_width=True)
+st.plotly_chart(
+    fig2,
+    use_container_width=True
+)
 
 st.subheader("📝 이 그래프로 알 수 있는 것")
 
@@ -175,15 +183,16 @@ fig3.update_layout(
     xaxis_tickformat=","
 )
 
-st.plotly_chart(fig3, use_container_width=True)
+st.plotly_chart(
+    fig3,
+    use_container_width=True
+)
 
 if len(hist_values) > 0:
 
-    bins = 30
-
     counts, edges = np.histogram(
         hist_values,
-        bins=bins
+        bins=30
     )
 
     max_bin = int(np.argmax(counts))
@@ -267,7 +276,10 @@ fig4.update_layout(
     yaxis_tickformat=","
 )
 
-st.plotly_chart(fig4, use_container_width=True)
+st.plotly_chart(
+    fig4,
+    use_container_width=True
+)
 
 st.subheader("📝 이 그래프로 알 수 있는 것")
 
@@ -282,7 +294,7 @@ st.divider()
 
 # =======================================
 # 5. 장르별 총 관객 수 - 박스플롯
-# 영화가 10편 이상인 장르만 표시
+# 영화가 10편 이상인 장르만
 # =======================================
 st.header("5️⃣ 장르별 총 관객 수 분포")
 
@@ -298,7 +310,11 @@ valid_genres = genre_movie_count[
 box_df = df[
     df["genre_first"].isin(valid_genres)
 ].dropna(
-    subset=["genre_first", "total_audi", "movieNm"]
+    subset=[
+        "genre_first",
+        "total_audi",
+        "movieNm"
+    ]
 ).copy()
 
 fig5 = px.box(
@@ -326,7 +342,10 @@ fig5.update_layout(
     yaxis_tickformat=","
 )
 
-st.plotly_chart(fig5, use_container_width=True)
+st.plotly_chart(
+    fig5,
+    use_container_width=True
+)
 
 st.subheader("📝 이 그래프로 알 수 있는 것")
 
@@ -340,8 +359,8 @@ st.divider()
 
 
 # =======================================
-# 6. 첫날 스크린 수 + 첫 주 관객 수 + 총 관객 수
-# 버블 산점도
+# 6. 버블 산점도
+# 버블 크기 = 첫 주 관객
 # =======================================
 st.header("6️⃣ 첫날 스크린 수와 총 관객 수 - 버블 그래프")
 
@@ -355,7 +374,9 @@ bubble_df = df.dropna(
     ]
 ).copy()
 
-bubble_df["bubble_size"] = bubble_df["first_week_audi"].clip(lower=1)
+bubble_df["bubble_size"] = bubble_df[
+    "first_week_audi"
+].clip(lower=1)
 
 fig6 = px.scatter(
     bubble_df,
@@ -391,7 +412,10 @@ fig6.update_layout(
     yaxis_tickformat=","
 )
 
-st.plotly_chart(fig6, use_container_width=True)
+st.plotly_chart(
+    fig6,
+    use_container_width=True
+)
 
 st.subheader("📝 이 그래프로 알 수 있는 것")
 
@@ -414,6 +438,7 @@ sunburst_df = df.dropna(
     subset=["nation", "genre_first"]
 ).copy()
 
+# 제작 국가가 여러 개라면 첫 번째 국가만 사용
 sunburst_df["nation_first"] = (
     sunburst_df["nation"]
     .astype(str)
@@ -423,20 +448,29 @@ sunburst_df["nation_first"] = (
 )
 
 sunburst_df.loc[
-    sunburst_df["nation_first"].isin(["", "nan", "None"]),
+    sunburst_df["nation_first"].isin(
+        ["", "nan", "None"]
+    ),
     "nation_first"
 ] = "미상"
 
 sunburst_count = (
     sunburst_df
-    .groupby(["nation_first", "genre_first"])
+    .groupby(
+        ["nation_first", "genre_first"]
+    )
     .size()
-    .reset_index(name="movie_count")
+    .reset_index(
+        name="movie_count"
+    )
 )
 
 fig7 = px.sunburst(
     sunburst_count,
-    path=["nation_first", "genre_first"],
+    path=[
+        "nation_first",
+        "genre_first"
+    ],
     values="movie_count",
     title="제작 국가 → 장르별 영화 편수",
     labels={
@@ -454,7 +488,21 @@ fig7.update_traces(
     )
 )
 
-st.plotly_chart(fig7, use_container_width=True)
+# ★ 7번 그래프 크게 만들기
+fig7.update_layout(
+    height=850,
+    margin=dict(
+        l=20,
+        r=20,
+        t=80,
+        b=20
+    )
+)
+
+st.plotly_chart(
+    fig7,
+    use_container_width=True
+)
 
 st.subheader("📝 이 그래프로 알 수 있는 것")
 
@@ -468,8 +516,8 @@ st.divider()
 
 
 # =======================================
-# 8. 장르별 TOP 10 유지 기간 - 막대그래프
-# 영화가 10편 이상인 장르만 표시
+# 8. 장르별 TOP 10 유지 기간
+# 영화가 10편 이상인 장르만
 # =======================================
 st.header("8️⃣ 장르별 TOP 10 유지 기간")
 
@@ -480,7 +528,6 @@ days_df = df.dropna(
     ]
 ).copy()
 
-# 영화가 10편 이상인 장르만 선택
 genre_count_for_days = (
     days_df["genre_first"]
     .value_counts()
@@ -491,13 +538,16 @@ valid_genres_days = genre_count_for_days[
 ].index
 
 days_df = days_df[
-    days_df["genre_first"].isin(valid_genres_days)
+    days_df["genre_first"].isin(
+        valid_genres_days
+    )
 ]
 
-# 장르별 평균 TOP 10 유지 일수
 genre_days = (
     days_df
-    .groupby("genre_first")["days_in_top10"]
+    .groupby("genre_first")[
+        "days_in_top10"
+    ]
     .mean()
     .reset_index()
 )
@@ -507,7 +557,6 @@ genre_days.columns = [
     "average_days"
 ]
 
-# 평균 유지 일수가 긴 순서로 정렬
 genre_days = genre_days.sort_values(
     "average_days",
     ascending=False
@@ -540,7 +589,10 @@ fig8.update_layout(
     xaxis_title="장르"
 )
 
-st.plotly_chart(fig8, use_container_width=True)
+st.plotly_chart(
+    fig8,
+    use_container_width=True
+)
 
 st.subheader("📝 이 그래프로 알 수 있는 것")
 
